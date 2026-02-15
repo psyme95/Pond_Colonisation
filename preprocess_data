@@ -1,0 +1,9 @@
+# Import libraries
+import pandas as pd
+import geopandas as gpd
+import numpy as np
+
+# Load the data
+Pond_Surveys = pd.read_csv('./Data/Pond_Surveys.csv')
+Pond_Agreements = pd.read_csv('./Data/Pond_Agreements.csv')
+EDP_Boundaries = gpd.read_file('./Data/EDP_Boundaries.gdb')
