@@ -4,6 +4,11 @@ import geopandas as gpd
 import numpy as np
 
 # Load the data
-Pond_Surveys = pd.read_csv('./Data/Pond_Surveys.csv')
-Pond_Agreements = pd.read_csv('./Data/Pond_Agreements.csv')
-EDP_Boundaries = gpd.read_file('./Data/EDP_Boundaries.gdb')
+Pond_Surveys = pd.read_excel('./Data/Pond_Surveys.xls')
+Pond_Agreements = pd.read_excel('./Data/Pond_Agreements.xlsx')
+EDP_Boundaries = gpd.read_file('./Data/EDP_Boundaries_111225.gdb', layer='EDP_Boundaries_111225')
+
+# Process & Clean Pond Agreements
+Pond_Ag = Pond_Agreements.filter(items = ["GlobalID","Site Grid Reference", "Pond Status", "Creation or Restoration?", "Within Core/Fringe Area?"])
+Pond_Ag = Pond_Ag.rename(columns={"GlobalID": "GlobalID", "Site Grid Reference": "Grid_Ref", "Pond Status": "Pond_Status", "Creation or Restoration?": "Type", "Within Core/Fringe Area?": "Area"})
+Pond_Ag.head()
