@@ -2,13 +2,50 @@
 import pandas as pd
 import geopandas as gpd
 import numpy as np
+from OSGridConverter import grid2latlong
 
 # Load the data
 Pond_Surveys = pd.read_excel('./Data/Pond_Surveys.xls')
 Pond_Agreements = pd.read_excel('./Data/Pond_Agreements.xlsx')
 EDP_Boundaries = gpd.read_file('./Data/EDP_Boundaries_111225.gdb', layer='EDP_Boundaries_111225')
 
-# Process & Clean Pond Agreements
+# Filter and rename Pond Agreements
 Pond_Ag = Pond_Agreements.filter(items = ["GlobalID","Site Grid Reference", "Pond Status", "Creation or Restoration?", "Within Core/Fringe Area?"])
 Pond_Ag = Pond_Ag.rename(columns={"GlobalID": "GlobalID", "Site Grid Reference": "Grid_Ref", "Pond Status": "Pond_Status", "Creation or Restoration?": "Type", "Within Core/Fringe Area?": "Area"})
-Pond_Ag.head()
+
+# Clean the Pond Status column
+Pond_Ag["Pond_Status"] = Pond_Ag["Pond_Status"].map({
+    "Pond Complete": "Complete",
+    "Pond Complete/Under Review": "Complete", 
+    "Pond Failed": "Failed"
+})
+
+# Collapse restoration types into a single category
+Pond_Ag["Type"] = Pond_Ag["Type"].map({
+    "Restoration (existing pond)": "Restoration",
+    "Restoration (ghost pond)": "Restoration"
+})
+
+# Keep only core/fringe (No/Not provided become NA)
+Pond_Ag["Area"] = Pond_Ag["Area"].map({
+    "Core": "Core",
+    "Fringe": "Fringe"
+})
+
+# Filter out invalid grid refs before conversion
+def is_valid_gridref(grid_ref):
+    if len(grid_ref) < 2:
+        return False
+    letters = grid_ref[:2]
+    digits = grid_ref[2:]
+    return letters.isalpha() and digits.isdigit() and len(digits) in [2, 4, 6, 8, 10]
+
+Pond_Ag = Pond_Ag[Pond_Ag["Grid_Ref"].apply(is_valid_gridref)]
+coords = Pond_Ag["Grid_Ref"].apply(grid2latlong)
+
+# Extract latitude and longitude into separate columns
+Pond_Ag["Latitude"] = coords.apply(lambda x: x.latitude)
+Pond_Ag["Longitude"] = coords.apply(lambda x: x.longitude)
+
+# Filter to only include complete or failed ponds
+Pond_Ag = Pond_Ag[Pond_Ag["Pond_Status"].isin(["Complete", "Failed"])]
