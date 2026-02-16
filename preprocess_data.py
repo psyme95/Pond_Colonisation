@@ -75,7 +75,8 @@ Pond_Surv["Year"] = Pond_Surv["Year"].replace({
     "Year 3": 3,
     "Year 4": 4,
     "Year 5": 5,
-    "Contingency Survey": 6
+    "Contingency Survey": 6,
+    "Year 9": 6
 })
 
 # Extract eDNA Score as numeric
