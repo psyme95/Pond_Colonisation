@@ -10,20 +10,20 @@ Pond_Agreements = pd.read_excel('./Data/Pond_Agreements.xls')
 EDP_Boundaries = gpd.read_file('./Data/EDP_Boundaries_111225.gdb', layer='EDP_Boundaries_111225')
 
 # Process & Clean Pond Agreements ----
-Pond_Ag = Pond_Agreements[["GlobalID", "Site Grid Reference", "Pond Status", 
+Pond_Ag = Pond_Agreements[["GlobalID", "Site Grid Reference", "Pond Status",
                            "Creation or Restoration?", "Within Core/Fringe Area?"]].copy()
 
 Pond_Ag = Pond_Ag.rename(columns={
-    "Site Grid Reference": "Grid_Ref", 
-    "Pond Status": "Pond_Status", 
-    "Creation or Restoration?": "Type", 
+    "Site Grid Reference": "Grid_Ref",
+    "Pond Status": "Pond_Status",
+    "Creation or Restoration?": "Type",
     "Within Core/Fringe Area?": "Area"
 })
 
 # Clean the Pond Status column
 Pond_Ag["Pond_Status"] = Pond_Ag["Pond_Status"].replace({
     "Pond Complete": "Complete",
-    "Pond Complete/Under Review": "Complete", 
+    "Pond Complete/Under Review": "Complete",
     "Pond Failed": "Failed"
 })
 
@@ -62,9 +62,9 @@ Pond_Ag = Pond_Ag[Pond_Ag["Pond_Status"].isin(["Complete", "Failed"])]
 Pond_Surv = Pond_Surveys[["Pond_GUID", "Monitoring Year", "eDNA Score", "GCN Status"]].copy()
 
 Pond_Surv = Pond_Surv.rename(columns={
-    "Pond_GUID": "Pond_GUID", 
-    "Monitoring Year": "Year", 
-    "eDNA Score": "eDNA_Score", 
+    "Pond_GUID": "Pond_GUID",
+    "Monitoring Year": "Year",
+    "eDNA Score": "eDNA_Score",
     "GCN Status": "GCN_Status"
 })
 
@@ -80,7 +80,7 @@ Pond_Surv["Year"] = Pond_Surv["Year"].replace({
 
 # Extract eDNA Score as numeric
 Pond_Surv["eDNA_Score"] = pd.to_numeric(
-    Pond_Surv["eDNA_Score"].astype(str).str.extract(r'(\d+)')[0], 
+    Pond_Surv["eDNA_Score"].astype(str).str.extract(r'(\d+)')[0],
     errors='coerce'
 )
 
@@ -92,10 +92,10 @@ Pond_Surv["GCN_Status"] = Pond_Surv["GCN_Status"].map({
 
 # Join surveys to agreements
 Pond_Data = pd.merge(
-    Pond_Surv, 
-    Pond_Ag, 
-    left_on="Pond_GUID", 
-    right_on="GlobalID", 
+    Pond_Surv,
+    Pond_Ag,
+    left_on="Pond_GUID",
+    right_on="GlobalID",
     how="left"
 )
 
@@ -125,11 +125,11 @@ Pond_Data_With_Coords = Pond_Data.dropna(subset=["Latitude", "Longitude"])
 
 # Create GeoDataFrame
 Pond_Geo = gpd.GeoDataFrame(
-    Pond_Data_With_Coords, 
+    Pond_Data_With_Coords,
     geometry=gpd.points_from_xy(
-        Pond_Data_With_Coords["Longitude"], 
+        Pond_Data_With_Coords["Longitude"],
         Pond_Data_With_Coords["Latitude"]
-    ), 
+    ),
     crs="EPSG:4326"
 )
 
@@ -143,8 +143,8 @@ Pond_Final = gpd.sjoin(Pond_Geo, EDP_Boundaries, how="left", predicate="within")
 Pond_Final = Pond_Final.drop(columns=["geometry", "index_right"])
 
 # Select relevant columns (matching R output structure)
-Pond_Final = Pond_Final[["Pond_GUID", "Year", "GCN_Status", "GCN_Colonised", 
-                         "eDNA_Score", "Type", "Area", "Pond_Status", 
+Pond_Final = Pond_Final[["Pond_GUID", "Year", "GCN_Status", "GCN_Colonised",
+                         "eDNA_Score", "Type", "Area", "Pond_Status",
                          "Latitude", "Longitude", "EDP"]]
 
 # Save cleaned datasets ----
